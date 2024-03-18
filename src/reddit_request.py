@@ -50,3 +50,4 @@ class Reddit_Request:
     def get_dataframe_row(self, index):
         get_row = self.df.iloc[index]
         return get_row
+
