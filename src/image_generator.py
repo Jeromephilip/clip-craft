@@ -5,7 +5,6 @@ from dotenv import load_dotenv
 from PIL import Image
 
 class Reddit_Image_Generator:
-
     def __init__(self, url, username, password, client_id, secret_token):
         self.username = username
         self.password = password
@@ -39,7 +38,8 @@ SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
 
 rq = Reddit_Request(USERNAME, PASSWORD, CLIENT_ID, SECRET_TOKEN)
 rq.search_subreddit("Showerthoughts")
-url = rq.get_dataframe_row(10)['url']
+
+url = rq.get_dataframe_row(10)['url'] # TODO: get random row based on highest upvote ratio
 
 ig = Reddit_Image_Generator(url, USERNAME, PASSWORD, CLIENT_ID, SECRET_TOKEN)
 ig.crop_image()
