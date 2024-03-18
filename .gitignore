@@ -1,3 +1,4 @@
 .env
+.venv
 **/.DS_Store
 src/__pycache__
