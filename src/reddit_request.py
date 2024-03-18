@@ -5,7 +5,8 @@ import os
 
 load_dotenv()
 
-USERNAME = os.environ.get('USERNAME')
+# environment vars
+USERNAME = os.environ.get('USERNAME') 
 PASSWORD = os.environ.get('PASSWORD')
 CLIENT_ID = os.environ.get('CLIENTID')
 SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
