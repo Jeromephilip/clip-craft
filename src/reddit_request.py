@@ -1,53 +1,52 @@
 import requests
 import pandas as pd
-from dotenv import load_dotenv
-import os
+from datetime import datetime, timedelta
 
-load_dotenv()
+class Reddit_Request:
+    def __init__(self, username, password, client_id, secret_token):
+        self.username = username
+        self.password = password
+        self.client_id = client_id
+        self.secret_token = secret_token
+        self.access_token = None
+        self.headers = None
+        self.df = pd.DataFrame()
 
-# environment vars
-USERNAME = os.environ.get('USERNAME') 
-PASSWORD = os.environ.get('PASSWORD')
-CLIENT_ID = os.environ.get('CLIENTID')
-SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
+    def get_access_token(self):
+        auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret_token)
 
-# note that CLIENT_ID refers to 'personal use script' and SECRET_TOKEN to 'token'
-auth = requests.auth.HTTPBasicAuth(CLIENT_ID, SECRET_TOKEN)
+        data = {'grant_type': 'password',
+                'username': self.username,
+                'password': self.password}
 
-# here we pass our login method (password), username, and password
-data = {'grant_type': 'password',
-        'username': USERNAME,
-        'password': PASSWORD}
+        headers = {'User-Agent': 'MyBot/0.0.1'}
 
-# setup our header info, which gives reddit a brief description of our app
-headers = {'User-Agent': 'MyBot/0.0.1'}
+        res = requests.post('https://www.reddit.com/api/v1/access_token', auth=auth, data=data, headers=headers)
 
-# send our request for an OAuth token
-res = requests.post('https://www.reddit.com/api/v1/access_token', auth=auth, data=data, headers=headers) # gets access token for requests.
+        self.access_token = res.json()['access_token']
 
-# convert response to JSON and pull access_token value
-TOKEN = res.json()['access_token']
+        self.headers = {**headers, **{'Authorization': f"bearer {self.access_token}"}}
 
-# add authorization to our headers dictionary
-headers = {**headers, **{'Authorization': f"bearer {TOKEN}"}}
+    def search_subreddit(self, subreddit):
+        self.get_access_token()
+        time_frame = datetime.now() - timedelta(days=30) # last 30 days
+        res = requests.get("https://oauth.reddit.com/r/%s" % subreddit, headers=self.headers, params={'limit': 100})
+        
+        for post in res.json()['data']['children']:
+            post_time = datetime.fromtimestamp(post['data']['created_utc'])
+            if (post_time > time_frame):
+                new_data = {'subreddit': post['data']['subreddit'],
+                            'title': post['data']['title'],
+                            'url': post['data']['url'],
+                            'upvote_ratio': post['data']['upvote_ratio'],
+                            'created_utc': datetime.fromtimestamp(post['data']['created_utc'])}
+                self.df = pd.concat([self.df, pd.DataFrame([new_data])], ignore_index=True)
 
-requests.get('https://oauth.reddit.com/api/v1/me', headers=headers)
+        self.df = self.df.sort_values('created_utc')
+    
+    def get_dataframe(self):
+        return self.df
 
-res = requests.get("https://oauth.reddit.com/r/Showerthoughts", headers=headers)
-
-data = res.json()
-
-df = pd.DataFrame()
-
-for post in data['data']['children']:
-    new_data = {'subreddit': post['data']['subreddit'],
-                'title': post['data']['title'],
-                'selftext': post['data']['selftext'],
-                'upvote_ratio': post['data']['upvote_ratio'],
-                'ups': post['data']['ups'],
-                'downs': post['data']['downs'],
-                'score': post['data']['score']}
-    df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
-# print(df)
-
-
+    def get_dataframe_row(self, index):
+        get_row = self.df.iloc[index]
+        return get_row
