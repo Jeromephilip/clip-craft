@@ -6,14 +6,20 @@ import os
 
 class Video_Editor:
     def __init__(self, username, password, client_id, secret_token):
-        self.rq = Reddit_Request(username, password, client_id, secret_token)
-        self.df = self.rq.get_dataframe()
+        self.r_req = Reddit_Request(username, password, client_id, secret_token)
+        self.df = self.r_req.get_dataframe()
+        self.r_image = None # image instance
+        self.reddit_story_data = None
 
     def create_tts(self):
-        title = self.rq.get_highest_upvoted_story()
-        speak(title)
+        self.reddit_story_data = self.r_req .get_highest_upvoted_story()
+        speak(self.reddit_story_data['title'])
+        return self.reddit_story_data 
 
-        return title
+    def get_reddit_image(self):
+        if (self.reddit_story_data):
+            self.r_image = Reddit_Image_Generator(self.reddit_story_data['url'])
+            self.r_image.crop_image()
     
 
 load_dotenv()
@@ -26,5 +32,6 @@ SECRET_TOKEN = os.environ.get('SECRET_TOKEN')
 ve = Video_Editor(USERNAME, PASSWORD, CLIENT_ID, SECRET_TOKEN)
 
 print(ve.create_tts())
+ve.get_reddit_image()
 
     

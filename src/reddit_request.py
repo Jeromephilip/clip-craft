@@ -54,15 +54,19 @@ class Reddit_Request:
         return get_row
     
     def get_highest_upvoted_story(self):
-        max = 0
-        highest_row_title = None
+
+        highest_upvoted_story_data = { 'upvote_ratio': 0, 
+                                      'title': None, 
+                                      'url': None }
+
         for index, row in self.df.iterrows():
             # print(row['title'], ' ----> ', row['upvote_ratio'])
-            if row['upvote_ratio'] > max:
-                max = row['upvote_ratio']
-                highest_row_title = row['title']
+            if row['upvote_ratio'] > highest_upvoted_story_data['upvote_ratio']:
+                highest_upvoted_story_data['upvote_ratio'] = row['upvote_ratio']
+                highest_upvoted_story_data['title'] = row['title']
+                highest_upvoted_story_data['url'] = row['url']
 
-        return highest_row_title
+        return highest_upvoted_story_data
         
 
 
