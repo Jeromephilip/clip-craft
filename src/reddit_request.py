@@ -11,6 +11,8 @@ class Reddit_Request:
         self.access_token = None
         self.headers = None
         self.df = pd.DataFrame()
+        self.get_access_token()
+        self.search_subreddit("Showerthoughts")
 
     def get_access_token(self):
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret_token)
@@ -28,14 +30,14 @@ class Reddit_Request:
         self.headers = {**headers, **{'Authorization': f"bearer {self.access_token}"}}
 
     def search_subreddit(self, subreddit):
-        self.get_access_token()
         time_frame = datetime.now() - timedelta(days=30) # last 30 days
         res = requests.get("https://oauth.reddit.com/r/%s" % subreddit, headers=self.headers, params={'limit': 100})
         
         for post in res.json()['data']['children']:
             post_time = datetime.fromtimestamp(post['data']['created_utc'])
             if (post_time > time_frame):
-                new_data = {'subreddit': post['data']['subreddit'],
+                new_data = {'id': post['data']['id'],
+                            'subreddit': post['data']['subreddit'],
                             'title': post['data']['title'],
                             'url': post['data']['url'],
                             'upvote_ratio': post['data']['upvote_ratio'],
@@ -50,5 +52,17 @@ class Reddit_Request:
     def get_dataframe_row(self, index):
         get_row = self.df.iloc[index]
         return get_row
+    
+    def get_highest_upvoted_story(self):
+        max = 0
+        highest_row_title = None
+        for index, row in self.df.iterrows():
+            # print(row['title'], ' ----> ', row['upvote_ratio'])
+            if row['upvote_ratio'] > max:
+                max = row['upvote_ratio']
+                highest_row_title = row['title']
+
+        return highest_row_title
+        
 
 
