@@ -1,8 +1,9 @@
 import requests
 import pandas as pd
 from datetime import datetime, timedelta
+import sqlite3 as sl
 
-class Reddit_Request:
+class RedditRequest:
     def __init__(self, username, password, client_id, secret_token):
         self.username = username
         self.password = password
@@ -13,6 +14,17 @@ class Reddit_Request:
         self.df = pd.DataFrame()
         self.get_access_token()
         self.search_subreddit("Showerthoughts")
+        self.db_con = sl.connect('./database.db')
+
+    def db_connect(self):
+        with self.db_con:
+            self.db_con.execute("""
+                                CREATE TABLE USED_REDDIT_STORIES (
+                                    id TEXT,
+                                    title TEXT
+                                );
+                                """)
+
 
     def get_access_token(self):
         auth = requests.auth.HTTPBasicAuth(self.client_id, self.secret_token)
@@ -55,16 +67,24 @@ class Reddit_Request:
     
     def get_highest_upvoted_story(self):
 
-        highest_upvoted_story_data = { 'upvote_ratio': 0, 
+        highest_upvoted_story_data = {'id': 0, 
+                                      'upvote_ratio': 0, 
                                       'title': None, 
                                       'url': None }
 
         for index, row in self.df.iterrows():
             # print(row['title'], ' ----> ', row['upvote_ratio'])
             if row['upvote_ratio'] > highest_upvoted_story_data['upvote_ratio']:
+                highest_upvoted_story_data['id'] = row['id']
                 highest_upvoted_story_data['upvote_ratio'] = row['upvote_ratio']
                 highest_upvoted_story_data['title'] = row['title']
                 highest_upvoted_story_data['url'] = row['url']
+
+
+        sql = 'INSERT INTO USED_REDDIT_STORIES (id, title) values(?, ?)'
+        params = (highest_upvoted_story_data['id'], highest_upvoted_story_data['title'])
+
+        self.db_con.execute(sql, params)
 
         return highest_upvoted_story_data
         

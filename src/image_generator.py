@@ -1,10 +1,10 @@
 from selenium import webdriver
-from reddit_request import Reddit_Request
+from reddit_request import RedditRequest
 import os
 from dotenv import load_dotenv
 from PIL import Image
 
-class Reddit_Image_Generator:
+class RedditImageGen:
     def __init__(self, url):
         self.url = url
         self.image = None
